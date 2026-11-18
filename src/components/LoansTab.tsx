@@ -43,17 +43,16 @@ export function LoansTab({ db, addLoan, markRepaid, addRepayment, deleteLoan, re
   return (
     <div className="space-y-4">
       <div className="flex justify-end print:hidden">
-        <button onClick={() => setShowAdd(true)} className={btnPrimary}>
+        <button onClick={() => setShowAdd(true)} className={btnPrimary + ' min-h-[48px]'}>
           <Plus size={16} />
-          Issue loan
+          Give a loan
         </button>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {activeLoans.length === 0 && (
           <Card className="p-6 text-sm text-neutral-500 sm:col-span-2 lg:col-span-3">
-            No active loans. Members can borrow up to {LOAN_MULTIPLIER}x their savings at{' '}
-            {LOAN_INTEREST_MONTHLY}% interest per month.
+            No active loans. Members can borrow up to {LOAN_MULTIPLIER}x what they have saved, and the cost is {LOAN_INTEREST_MONTHLY}% per month.
           </Card>
         )}
         {activeLoans.map((l) => {
@@ -72,11 +71,11 @@ export function LoansTab({ db, addLoan, markRepaid, addRepayment, deleteLoan, re
                 <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">Active</span>
               </div>
               <dl className="mt-3 space-y-1 text-xs">
-                <div className="flex justify-between"><dt className="text-neutral-500">Principal</dt><dd className="font-medium">{RWF(l.principal)}</dd></div>
-                <div className="flex justify-between"><dt className="text-neutral-500">Interest so far</dt><dd className="font-medium">{RWF(interest)}</dd></div>
-                <div className="flex justify-between"><dt className="text-neutral-500">Repaid</dt><dd className="font-medium text-emerald-700">{RWF(paid)}</dd></div>
+                <div className="flex justify-between"><dt className="text-neutral-500">Amount given</dt><dd className="font-medium">{RWF(l.principal)}</dd></div>
+                <div className="flex justify-between"><dt className="text-neutral-500">Loan cost so far</dt><dd className="font-medium">{RWF(interest)}</dd></div>
+                <div className="flex justify-between"><dt className="text-neutral-500">Paid back</dt><dd className="font-medium text-emerald-700">{RWF(paid)}</dd></div>
                 <div className="flex justify-between border-t border-neutral-100 pt-1">
-                  <dt className="text-neutral-500 font-medium">Balance</dt>
+                  <dt className="text-neutral-500 font-medium">Still owed</dt>
                   <dd className="font-bold text-neutral-900">{RWF(Math.max(0, balance))}</dd>
                 </div>
               </dl>
@@ -127,7 +126,7 @@ export function LoansTab({ db, addLoan, markRepaid, addRepayment, deleteLoan, re
       </div>
 
       {showAdd && (
-        <Modal title="Issue loan / Gutanga inguzi" onClose={() => setShowAdd(false)}>
+        <Modal title="Give a loan / Gutanga inguzi" onClose={() => setShowAdd(false)}>
           <div className="space-y-3">
             <Field label="Member">
               <select value={memberId} onChange={(e) => setMemberId(e.target.value)} className={inputCls}>
@@ -139,27 +138,27 @@ export function LoansTab({ db, addLoan, markRepaid, addRepayment, deleteLoan, re
             </Field>
             {totals && (
               <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-                Savings: {RWF(totals.shares)} · Max loan ({LOAN_MULTIPLIER}x): <strong>{RWF(maxLoan)}</strong>
+                {m.name} has saved {RWF(totals.shares)} — they can borrow up to <strong>{RWF(maxLoan)}</strong>.
               </p>
             )}
-            <Field label={`Principal (RWF) — max ${RWF(maxLoan)}`}>
+            <Field label="How much are they borrowing? (RWF)">
               <input
                 type="number"
                 min="1"
                 value={principal}
                 onChange={(e) => setPrincipal(e.target.value)}
-                className={inputCls}
+                className={inputCls + ' min-h-[48px]'}
               />
             </Field>
             <p className="text-xs text-neutral-500">
-              Interest: {LOAN_INTEREST_MONTHLY}% per month on outstanding principal (Ikiguzi cy'inguzi).
+              The loan grows by {LOAN_INTEREST_MONTHLY}% each month until it is fully repaid. "Available to borrow" is simply 3× what the member has saved.
             </p>
             <button
               onClick={submit}
               disabled={!memberId || !Number(principal) || (totals ? Number(principal) > maxLoan : false)}
-              className={btnPrimary + ' w-full justify-center'}
+              className={btnPrimary + ' min-h-[48px] w-full justify-center'}
             >
-              Issue loan
+              Give the loan
             </button>
           </div>
         </Modal>
@@ -169,10 +168,10 @@ export function LoansTab({ db, addLoan, markRepaid, addRepayment, deleteLoan, re
         <Modal title="Record repayment" onClose={() => setRepay(null)}>
           <div className="space-y-3">
             <Field label="Amount (RWF)">
-              <input type="number" min="1" value={repayAmount} onChange={(e) => setRepayAmount(e.target.value)} className={inputCls} />
+              <input type="number" min="1" value={repayAmount} onChange={(e) => setRepayAmount(e.target.value)} className={inputCls + ' min-h-[48px]'} />
             </Field>
-            <Field label="Method">
-              <select value={repayMethod} onChange={(e) => setRepayMethod(e.target.value as PaymentMethod)} className={inputCls}>
+            <Field label="How did they pay?">
+              <select value={repayMethod} onChange={(e) => setRepayMethod(e.target.value as PaymentMethod)} className={inputCls + ' min-h-[48px]'}>
                 <option value="cash">Cash</option>
                 <option value="momo">MTN MoMo</option>
                 <option value="airtel">Airtel Money</option>
@@ -186,7 +185,7 @@ export function LoansTab({ db, addLoan, markRepaid, addRepayment, deleteLoan, re
                 setRepay(null);
                 await reload();
               }}
-              className={btnPrimary + ' w-full justify-center'}
+              className={btnPrimary + ' min-h-[48px] w-full justify-center'}
             >
               Save repayment
             </button>

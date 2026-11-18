@@ -1,6 +1,6 @@
-import { AlertTriangle, Users, Wallet, PiggyBank, Landmark, HandCoins } from 'lucide-react';
+import { AlertTriangle, CalendarClock, Users, Wallet, PiggyBank, Landmark, HandCoins } from 'lucide-react';
 import { Card, StatCard } from './ui';
-import { RWF, memberTotals, socialFundBalance } from '../lib/calc';
+import { RWF, memberTotals, shareOut, socialFundBalance } from '../lib/calc';
 import type { Db } from '../lib/types';
 
 export function DashboardTab({ db, goTo }: { db: Db; goTo: (tab: 'members' | 'loans' | 'social' | 'shareout') => void }) {
@@ -19,6 +19,15 @@ export function DashboardTab({ db, goTo }: { db: Db; goTo: (tab: 'members' | 'lo
     .filter((t) => t.loanBalance > 0)
     .sort((a, b) => b.loanBalance - a.loanBalance)
     .slice(0, 5);
+
+  // Countdown to Kugabana: assume share-out each January 1st.
+  const now = new Date();
+  const nextShareOut = new Date(now.getFullYear() + 1, 0, 1);
+  const daysToShareOut = Math.ceil((nextShareOut.getTime() - now.getTime()) / 86400000);
+  const projected = shareOut(db).rows
+    .map((r) => ({ name: r.member.name, payout: r.payout }))
+    .sort((a, b) => b.payout - a.payout)
+    .slice(0, 3);
 
   const recent = [
     ...db.contributions.map((c) => ({
@@ -47,9 +56,7 @@ export function DashboardTab({ db, goTo }: { db: Db; goTo: (tab: 'members' | 'lo
       {db.members.length === 0 && (
         <Card className="border-emerald-200 bg-emerald-50 p-5">
           <h2 className="text-base font-semibold text-emerald-900">Murakaza neza! Welcome to Ibimina</h2>
-          <p className="mt-1 text-sm text-emerald-800">
-            Your group ledger is empty. Start here:
-          </p>
+          <p className="mt-1 text-sm text-emerald-800">Your group ledger is empty. Start here:</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-emerald-900">
             <li>Add your members under <strong>Abanyamuryango · Members</strong></li>
             <li>Record their weekly or monthly share payments (Imigabane)</li>
@@ -58,11 +65,39 @@ export function DashboardTab({ db, goTo }: { db: Db; goTo: (tab: 'members' | 'lo
           </ol>
           <button
             onClick={() => goTo('members')}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
+            className="mt-3 inline-flex min-h-[48px] items-center gap-1.5 rounded-lg bg-emerald-700 px-4 text-sm font-medium text-white hover:bg-emerald-800"
           >
             <Users size={15} />
             Add your first member
           </button>
+        </Card>
+      )}
+
+      {db.members.length > 0 && (
+        <Card className="border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="rounded-xl bg-amber-100 p-2.5">
+              <CalendarClock size={22} className="text-amber-700" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-amber-900">
+                Kugabana share-out is in <strong>{daysToShareOut} days</strong>
+              </p>
+              {projected.length > 0 ? (
+                <p className="text-xs text-amber-800">
+                  On track to receive: {projected.map((p) => `${p.name} ${RWF(p.payout)}`).join(' · ')}
+                </p>
+              ) : (
+                <p className="text-xs text-amber-800">Every member's savings comes back, plus a share of loan interest and fines.</p>
+              )}
+            </div>
+            <button
+              onClick={() => goTo('shareout')}
+              className="min-h-[48px] rounded-lg bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700"
+            >
+              See full plan
+            </button>
+          </div>
         </Card>
       )}
 
@@ -126,7 +161,7 @@ export function DashboardTab({ db, goTo }: { db: Db; goTo: (tab: 'members' | 'lo
 
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 print:hidden">
         <QuickLink icon={Users} label="Add member / payment" onClick={() => goTo('members')} />
-        <QuickLink icon={Landmark} label="Issue a loan" onClick={() => goTo('loans')} />
+        <QuickLink icon={Landmark} label="Give a loan" onClick={() => goTo('loans')} />
         <QuickLink icon={PiggyBank} label="Log Ingoboka event" onClick={() => goTo('social')} />
         <QuickLink icon={HandCoins} label="Kugabana share-out" onClick={() => goTo('shareout')} />
       </div>

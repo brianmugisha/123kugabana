@@ -41,7 +41,8 @@ export function ShareOutTab({ db }: { db: Db }) {
             {rows.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-4 py-6 text-center text-sm text-neutral-500">
-                  Add members and record Imigabane contributions to calculate the annual share-out.
+                  Nothing to share out yet. Add members and record their Imigabane savings — this page will show
+                  exactly what each person takes home on share-out day.
                 </td>
               </tr>
             )}

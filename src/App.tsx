@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { HandCoins, Loader2, Users, HeartHandshake, Landmark, Calculator, LayoutDashboard } from 'lucide-react';
+import { HandCoins, Loader2, Users, HeartHandshake, Landmark, Calculator, LayoutDashboard, Wifi, WifiOff } from 'lucide-react';
 import { MembersTab } from './components/MembersTab';
 import { SocialFundTab } from './components/SocialFundTab';
 import { LoansTab } from './components/LoansTab';
@@ -24,6 +24,18 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('dashboard');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [online, setOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
 
   const reload = useCallback(async () => {
     setError(null);
@@ -74,7 +86,18 @@ export default function App() {
     method: PaymentMethod,
     note: string,
   ) => {
-    const { error: e } = await supabase.from('share_contributions').insert({ member_id: memberId, type, amount, method, note });
+    const { data, error: e } = await supabase
+      .from('share_contributions')
+      .insert({ member_id: memberId, type, amount, method, note })
+      .select('id')
+      .single();
+    if (e) setError(e.message);
+    await reload();
+    return (data?.id as string | undefined) ?? null;
+  };
+
+  const deleteContribution = async (id: string) => {
+    const { error: e } = await supabase.from('share_contributions').delete().eq('id', id);
     if (e) setError(e.message);
     await reload();
   };
@@ -124,13 +147,26 @@ export default function App() {
               <h1 className="text-xl font-bold tracking-tight">Ibimina</h1>
               <p className="text-xs text-emerald-200">Ikibina — Community Savings & Lending · Rwanda</p>
             </div>
+            <div className="ml-auto flex items-center gap-1.5 rounded-full bg-emerald-900/60 px-3 py-1.5 text-[11px] font-medium">
+              {online ? (
+                <>
+                  <Wifi size={12} className="text-emerald-300" />
+                  <span className="text-emerald-100">Saved &amp; up to date</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff size={12} className="text-amber-300" />
+                  <span className="text-amber-200">Offline — will save when back online</span>
+                </>
+              )}
+            </div>
           </div>
           <nav className="mt-4 flex gap-1 overflow-x-auto">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setTab(id)}
-                className={`flex items-center gap-1.5 whitespace-nowrap rounded-t-lg px-3.5 py-2 text-sm font-medium transition-colors ${
+                className={`flex min-h-[48px] items-center gap-1.5 whitespace-nowrap rounded-t-lg px-3.5 py-2 text-sm font-medium transition-colors ${
                   tab === id ? 'bg-neutral-100 text-emerald-900' : 'text-emerald-100 hover:bg-emerald-700'
                 }`}
               >
@@ -159,7 +195,14 @@ export default function App() {
           <>
             {tab === 'dashboard' && <DashboardTab db={db} goTo={setTab} />}
             {tab === 'members' && (
-              <MembersTab db={db} addMember={addMember} addContribution={addContribution} deleteMember={deleteMember} reload={reload} />
+              <MembersTab
+                db={db}
+                addMember={addMember}
+                addContribution={addContribution}
+                deleteContribution={deleteContribution}
+                deleteMember={deleteMember}
+                reload={reload}
+              />
             )}
             {tab === 'loans' && (
               <LoansTab db={db} addLoan={addLoan} markRepaid={markRepaid} addRepayment={addRepayment} deleteLoan={deleteLoan} reload={reload} />
