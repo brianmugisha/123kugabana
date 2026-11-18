@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Larger base scale so balances and labels are easy to read on phones in the field */
+html {
+  font-size: 17px;
+}
+
+
+/* Print-friendly styles for passbooks, receipts and the Kugabana share-out sheet */
+@media print {
+  body {
+    background: white !important;
+    font-size: 11pt;
+  }
+
+  header,
+  nav,
+  button,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  main > div {
+    background: white !important;
+  }
+
+  /* Flatten cards and modals to plain printable content */
+  .fixed,
+  .sticky {
+    position: static !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+
+  .bg-white,
+  .bg-neutral-50,
+  .bg-neutral-100 {
+    background: white !important;
+  }
+
+  .shadow-sm,
+  .shadow,
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: none !important;
+  }
+
+  .rounded-xl,
+  .rounded-lg,
+  .rounded-2xl {
+    border-radius: 0 !important;
+  }
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th,
+  td {
+    border: 1px solid #d4d4d4 !important;
+    padding: 4pt 6pt !important;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  /* Colored text stays readable on paper */
+  .text-emerald-700,
+  .text-emerald-800,
+  .text-emerald-900 {
+    color: #14532d !important;
+  }
+
+  .text-red-600 {
+    color: #991b1b !important;
+  }
+
+  .text-neutral-500,
+  .text-neutral-400 {
+    color: #525252 !important;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+}
